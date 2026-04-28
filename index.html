@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Calyx Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --mint: #c5f0df;
+    --mint-text: #0f5945;
+    --mint-link: #0a6b50;
+    --page: #ffffff;
+    --card: #f4f5f7;
+    --card-soft: #f7f8fa;
+    --text: #0a0a0a;
+    --muted: #6b7280;
+    --muted-2: #9ca3af;
+    --border: #e5e7eb;
+    --border-2: #e7e9ee;
+    --green-soft: #d1fae5;
+    --shadow-card: none;
+  }
+  html, body, #root {
+    background: var(--page);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; }
+  a { color: inherit; text-decoration: none; cursor: pointer; }
+
+  /* CS Mode bar */
+  .cs-bar { background: var(--mint); color: var(--mint-text); padding: 8px 20px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 500; gap: 12px; flex-wrap: wrap; }
+  .cs-bar-left, .cs-bar-right { display: flex; align-items: center; gap: 16px; min-width: 0; flex-wrap: wrap; }
+  .cs-pill { background: #0a3a2c; color: #c5f0df; padding: 4px 12px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 12px; cursor: pointer; flex-shrink: 0; }
+  .cs-link { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .cs-link:hover { text-decoration: underline; }
+  .cs-bar-right .cs-link { color: var(--mint-link); font-weight: 600; }
+  .cs-search { background: #fff; border: 1px solid #d4d4d8; border-radius: 8px; padding: 5px 10px; width: 220px; min-width: 0; max-width: 100%; font-size: 13px; color: #6b7280; display: flex; align-items: center; justify-content: space-between; cursor: pointer; flex-shrink: 1; gap: 8px; height: 30px; overflow: hidden; }
+  .cs-search:hover { border-color: #9ca3af; }
+  .cs-search > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1 1 auto; }
+  .cs-search > svg { flex-shrink: 0; }
+  .cs-viewing { font-weight: 500; white-space: nowrap; }
+
+  /* Top-bar adaptive widths */
+  @media (max-width: 1100px) {
+    .cs-bar { gap: 8px 12px; padding: 8px 14px; }
+    .cs-search { width: 180px; }
+  }
+  @media (max-width: 820px) {
+    .cs-link.email-link { display: none; }
+    .cs-search { width: 160px; }
+  }
+  @media (max-width: 640px) {
+    .cs-bar { font-size: 12px; padding: 6px 12px; gap: 6px 10px; }
+    .cs-link.switch-link { display: none; }
+    .cs-viewing { display: none; }
+    .cs-bar-left, .cs-bar-right { gap: 8px; flex: 1 1 auto; }
+    .cs-bar-right { justify-content: flex-end; }
+    .cs-search { flex: 1 1 120px; min-width: 0; }
+  }
+  @media (max-width: 420px) {
+    .cs-link.report-bug .lbl { display: none; }
+    .cs-pill .lbl { display: none; }
+    .cs-pill { padding: 4px 8px; }
+  }
+
+  /* Nav */
+  .nav { background: #fff; border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; gap: 6px; width: 100%; min-width: 0; }
+  .nav-logo {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-right: 6px;
+    flex-shrink: 0;
+    line-height: 1;
+    gap: 1px;
+  }
+  .nav-logo svg { display: block; }
+  .nav-logo .brand {
+    font-size: 4.5px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    color: #1e40af;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.1;
+  }
+  .nav-items { display: flex; align-items: center; gap: 2px; flex: 1 1 auto; min-width: 0; overflow: hidden; }
+  .nav-item { display: inline-flex; align-items: center; gap: 5px; padding: 7px 11px; border-radius: 999px; font-size: 13.5px; font-weight: 500; color: #1f2937; cursor: pointer; white-space: nowrap; flex-shrink: 1; min-width: 0; }
+  .nav-item svg { flex-shrink: 0; }
+  .nav-item:hover { background: #f3f4f6; }
+  .nav-item.active { background: #000; color: #fff; flex-shrink: 0; }
+  .nav-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .nav-copilot { border: 1px solid var(--border); border-radius: 999px; padding: 7px 12px; display: inline-flex; align-items: center; gap: 5px; font-size: 13.5px; font-weight: 500; white-space: nowrap; }
+  .nav-copilot:hover { background: #f9fafb; }
+  .nav-bell { width: 32px; height: 32px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .nav-bell:hover { background: #f3f4f6; }
+
+  @media (max-width: 1280px) { .nav-item { padding: 7px 9px; font-size: 13px; gap: 4px; } .nav-copilot { padding: 7px 10px; font-size: 13px; } .nav { gap: 4px; padding: 10px 16px; } }
+  @media (max-width: 1100px) { .nav-item { padding: 6px 8px; font-size: 12.5px; } .nav-item svg { width: 12px; height: 12px; } }
+  @media (max-width: 980px) {
+    .nav-item:not(.active) { padding: 8px; }
+    .nav-item:not(.active) .lbl { display: none; }
+    .nav-copilot .lbl { display: none; }
+    .nav-copilot { padding: 8px; }
+  }
+
+  /* Main */
+  .main { padding: 18px 20px 24px; max-width: 1400px; margin: 0 auto; width: 100%; }
+  .welcome-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; flex-wrap: wrap; }
+  .welcome-row h1 { font-size: 24px; font-weight: 600; }
+  .welcome-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { padding: 9px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 500; display: inline-flex; align-items: center; gap: 7px; cursor: pointer; border: 1px solid transparent; white-space: nowrap; transition: filter .15s; }
+  .btn:hover { filter: brightness(1.05); }
+  .btn-primary {
+    color: #fff;
+    background: #1e3a8a;
+  }
+  .btn-accent  {
+    color: #fff;
+    background-image: linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #2dd4bf 100%);
+    background-color: #2563eb;
+    background-clip: padding-box;
+    border: 0;
+  }
+  .btn-outline { background: #fff; color: #111827; border-color: var(--border); }
+  .btn-outline:hover { background: #f9fafb; filter: none; }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 14px; }
+  .stat { background: var(--card); border: 1px solid var(--border-2); border-radius: 12px; padding: 14px 16px; min-width: 0; box-shadow: var(--shadow-card); }
+  .stat-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 6px; }
+  .stat-label { font-size: 10.5px; font-weight: 600; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stat-icon { color: var(--muted-2); display: inline-flex; flex-shrink: 0; }
+  .stat-value { font-size: 26px; font-weight: 600; line-height: 1; margin-bottom: 6px; }
+  .stat-value.dim { font-weight: 500; }
+  .stat-sub { font-size: 12.5px; color: var(--muted); }
+
+  /* Two cols */
+  .columns { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+  .col-left { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+  .col-right { flex: 0 0 360px; display: flex; flex-direction: column; gap: 14px; }
+
+  .card { background: var(--card); border: 1px solid var(--border-2); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow-card); }
+  .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; gap: 8px; flex-wrap: wrap; }
+  .card-title { display: inline-flex; align-items: center; gap: 8px; font-size: 15.5px; font-weight: 600; }
+  .card-title .ic { display: inline-flex; }
+  .card-sub { font-size: 11.5px; color: var(--muted); }
+
+  .tabs { display: inline-flex; gap: 2px; }
+  .tab { padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; color: #4b5563; cursor: pointer; }
+  .tab.active { background: #f3f4f6; color: #111827; }
+
+  .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 22px 12px 14px; text-align: center; }
+  .empty-icon-circle { width: 48px; height: 48px; border-radius: 999px; background: var(--green-soft); display: flex; align-items: center; justify-content: center; margin-bottom: 10px; color: #059669; }
+  .empty-icon-plain { width: 44px; height: 44px; border-radius: 999px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; color: #4b5563; }
+  .empty-title { font-size: 14.5px; font-weight: 600; margin-bottom: 4px; }
+  .empty-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 12px; max-width: 320px; }
+  .empty-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+  /* Calendar */
+  .cal-head { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 4px 0 8px; }
+  .cal-month { font-size: 14px; font-weight: 600; }
+  .cal-nav { width: 24px; height: 24px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; color: #6b7280; cursor: pointer; }
+  .cal-nav:hover { background: #f3f4f6; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 2px; }
+  .cal-dow { text-align: center; font-size: 10.5px; font-weight: 600; color: var(--muted); padding: 4px 0; }
+  .cal-day { aspect-ratio: 1 / 1; display: flex; align-items: flex-start; justify-content: center; padding-top: 6px; font-size: 12.5px; color: #111827; cursor: pointer; border-radius: 6px; border: 1px solid transparent; transition: background .12s, color .12s, border-color .12s; }
+  .cal-day.muted { color: #d1d5db; cursor: default; }
+  .cal-day:hover:not(.muted):not(.selected) { background: #e5e7eb; }
+  .cal-day.selected { background: #1e3a8a; color: #fff; font-weight: 600; border-color: #1e3a8a; }
+  .cal-day.selected:hover { background: #1e3a8a; }
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 8px 10px; padding-top: 10px; margin-top: 6px; font-size: 10.5px; color: var(--muted); }
+  .cal-legend .item { display: inline-flex; align-items: center; gap: 4px; }
+  .dot { width: 7px; height: 7px; border-radius: 999px; display: inline-block; }
+  .dot.win  { background: #2563eb; }
+  .dot.delay { background: #f87171; }
+  .dot.delivered { background: #10b981; }
+  .dot.notrack { background: #9ca3af; }
+
+  .quotes-empty { padding: 16px 8px 8px; }
+
+  .bottom-row { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--border); background: #fff; border-radius: 999px; padding: 7px 12px; font-size: 12.5px; color: #111827; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+  .chip:hover { background: #f9fafb; }
+  .chip.dashed { border-style: dashed; color: #6b7280; }
+
+  @media (max-width: 900px) {
+    .stats { grid-template-columns: repeat(3, 1fr); }
+    .columns { flex-direction: column; }
+    .col-right { flex: 1 1 auto; width: 100%; }
+  }
+  @media (max-width: 600px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .welcome-row { flex-direction: column; align-items: flex-start; }
+    .cs-search { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState } = React;
+const noop = (e) => { if (e && e.preventDefault) e.preventDefault(); };
+
+/* ---------- Reusable inline-SVG icons ---------- */
+const Icon = ({ children, size = 14, color = "currentColor", strokeWidth = 2, fill = "none" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    {children}
+  </svg>
+);
+
+/* ---------- Custom Icons (drawn to match screenshot) ---------- */
+const Eye = ({ s = 12, sw = 2.5 }) => <Icon size={s} strokeWidth={sw}><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></Icon>;
+const User = ({ s = 14 }) => <Icon size={s}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="8" r="4"/></Icon>;
+const Bug = ({ s = 14 }) => <Icon size={s}><path d="M8 2 9.5 4.5"/><path d="M16 2 14.5 4.5"/><rect x="6" y="6" width="12" height="13" rx="6"/><path d="M12 19v-9"/><path d="M3 9c0 1.6 1.4 3 3 3"/><path d="M21 9c0 1.6-1.4 3-3 3"/><path d="M3 18c0-1.6 1.4-3 3-3"/><path d="M21 18c0-1.6-1.4-3-3-3"/><path d="M3 13h2"/><path d="M19 13h2"/></Icon>;
+const ChevronUD = ({ s = 14 }) => <Icon size={s}><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></Icon>;
+const Sparkle = ({ s = 22, color = "#9ca3af" }) => (
+  <Icon size={s} color={color} strokeWidth={1.7}>
+    <path d="M12 3v3"/><path d="M12 18v3"/><path d="M3 12h3"/><path d="M18 12h3"/>
+    <path d="M5.6 5.6l2.1 2.1"/><path d="M16.3 16.3l2.1 2.1"/><path d="M5.6 18.4l2.1-2.1"/><path d="M16.3 7.7l2.1-2.1"/>
+  </Icon>
+);
+const BrainLogo = ({ s = 22, color = "#1e40af" }) => (
+  <svg width={s} height={s} viewBox="0 0 36 36" fill="none" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+    {/* Input arrow (left) */}
+    <path d="M2 18 H8.5"/>
+    <path d="M6.5 16 L8.5 18 L6.5 20"/>
+    {/* Output arrow (right) */}
+    <path d="M27.5 18 H34"/>
+    <path d="M32 16 L34 18 L32 20"/>
+    {/* Left lobe outline */}
+    <path d="M18 9
+             c-2.2 0-4 1.5-4.4 3.4
+             c-1.5 0.2-2.6 1.5-2.6 2.9
+             c0 0.8 0.4 1.6 1 2.1
+             c-0.6 0.5-1 1.3-1 2.1
+             c0 1.4 1.1 2.7 2.6 2.9
+             c0.4 1.9 2.2 3.2 4.4 3.2"/>
+    {/* Right lobe outline */}
+    <path d="M18 9
+             c2.2 0 4 1.5 4.4 3.4
+             c1.5 0.2 2.6 1.5 2.6 2.9
+             c0 0.8-0.4 1.6-1 2.1
+             c0.6 0.5 1 1.3 1 2.1
+             c0 1.4-1.1 2.7-2.6 2.9
+             c-0.4 1.9-2.2 3.2-4.4 3.2"/>
+    {/* Center spine */}
+    <path d="M18 9 V25.5"/>
+    {/* Inner gyri detail */}
+    <path d="M14 13 c0.8 0.7 0.8 1.7 0 2.4"/>
+    <path d="M14 18 c0.8 0.7 0.8 1.7 0 2.4"/>
+    <path d="M22 13 c-0.8 0.7-0.8 1.7 0 2.4"/>
+    <path d="M22 18 c-0.8 0.7-0.8 1.7 0 2.4"/>
+  </svg>
+);
+const Grid = ({ s = 13 }) => <Icon size={s} strokeWidth={1.8}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></Icon>;
+const Bag = ({ s = 13 }) => <Icon size={s} strokeWidth={1.8}><path d="M5 8h14l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></Icon>;
+const Box = ({ s = 13, sw = 1.8 }) => <Icon size={s} strokeWidth={sw}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05"/><path d="M12 22.08V12"/></Icon>;
+const FilePlus = ({ s = 13 }) => <Icon size={s} strokeWidth={1.8}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 11v6"/><path d="M9 14h6"/></Icon>;
+const Palette = ({ s = 14 }) => <Icon size={s} strokeWidth={1.8}><path d="M12 22a10 10 0 1 1 0-20 10 10 0 0 1 10 10 5 5 0 0 1-5 5h-1.7c-.7 0-1.3.6-1.3 1.3 0 .3.1.6.3.8.5.6.4 1.5-.3 1.9z"/><circle cx="7.5" cy="11.5" r=".7" fill="currentColor"/><circle cx="10.5" cy="7.5" r=".7" fill="currentColor"/><circle cx="14.5" cy="7" r=".7" fill="currentColor"/><circle cx="17.5" cy="11" r=".7" fill="currentColor"/></Icon>;
+const Shield = ({ s = 13 }) => <Icon size={s} strokeWidth={1.8}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></Icon>;
+const Cube = ({ s = 13 }) => <Icon size={s} strokeWidth={1.8}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05"/><path d="M12 22.08V12"/></Icon>;
+const PersonCircle = ({ s = 13 }) => <Icon size={s} strokeWidth={1.8}><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/><circle cx="12" cy="12" r="10"/></Icon>;
+const Bell = ({ s = 17, color = "#374151" }) => <Icon size={s} color={color} strokeWidth={1.8}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></Icon>;
+const Cart = ({ s = 14 }) => <Icon size={s} strokeWidth={1.8}><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h2.5l2.5 12.5a1.5 1.5 0 0 0 1.5 1.2h9a1.5 1.5 0 0 0 1.5-1.2L21 7H6"/></Icon>;
+const SparkleFill = ({ s = 14 }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2.5 13.6 8.4 19.5 10 13.6 11.6 12 17.5 10.4 11.6 4.5 10 10.4 8.4Z"/>
+    <path d="M19 14.5 19.7 16.7 21.9 17.5 19.7 18.3 19 20.5 18.3 18.3 16.1 17.5 18.3 16.7Z"/>
+    <path d="M5 3 5.5 4.6 7.1 5.1 5.5 5.6 5 7.2 4.5 5.6 2.9 5.1 4.5 4.6Z"/>
+  </svg>
+);
+const Diamond = ({ s = 14 }) => <Icon size={s} strokeWidth={1.8}><path d="M3 9 12 2 21 9 12 22 3 9z"/><path d="M3 9h18"/><path d="m12 2 3 7-3 13-3-13z"/></Icon>;
+const Truck = ({ s = 16, color = "currentColor" }) => <Icon size={s} color={color} strokeWidth={1.8}><path d="M2 7a1 1 0 0 1 1-1h10v11H4a1 1 0 0 1-1-1z" /><path d="M13 9h4l4 4v3a1 1 0 0 1-1 1h-3"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M9 18h6"/></Icon>;
+const Check = ({ s = 24, sw = 2.5 }) => <Icon size={s} strokeWidth={sw}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></Icon>;
+const Stars = ({ s = 16 }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="#2563eb">
+    <path d="M11 2.5 13 8.4 19 10 13 11.6 11 17.5 9 11.6 3 10 9 8.4Z"/>
+    <path d="M18 13.5 18.7 15.4 20.6 16 18.7 16.6 18 18.5 17.3 16.6 15.4 16 17.3 15.4Z"/>
+  </svg>
+);
+const ChevL = ({ s = 14 }) => <Icon size={s} strokeWidth={2}><polyline points="15 18 9 12 15 6"/></Icon>;
+const ChevR = ({ s = 14 }) => <Icon size={s} strokeWidth={2}><polyline points="9 18 15 12 9 6"/></Icon>;
+const ChevD = ({ s = 11 }) => <Icon size={s} strokeWidth={2}><polyline points="6 9 12 15 18 9"/></Icon>;
+const TrendUp = ({ s = 14 }) => <Icon size={s} strokeWidth={1.8}><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></Icon>;
+const Clipboard = ({ s = 14 }) => <Icon size={s} strokeWidth={1.8}><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6"/><path d="M9 16h4"/></Icon>;
+const Calendar = ({ s = 14 }) => <Icon size={s} strokeWidth={1.8}><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="16" y1="3" x2="16" y2="7"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="3" y1="10" x2="21" y2="10"/></Icon>;
+const Gauge = ({ s = 14 }) => <Icon size={s} strokeWidth={1.8}><circle cx="12" cy="12" r="10"/><path d="M12 12 16 8"/><path d="M12 12v-4"/></Icon>;
+const Doc = ({ s = 16 }) => <Icon size={s} strokeWidth={1.8}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></Icon>;
+const Flask = ({ s = 13 }) => <Icon size={s} strokeWidth={1.8}><path d="M9 2v6L4.5 18a2.5 2.5 0 0 0 2.2 3.5h10.6a2.5 2.5 0 0 0 2.2-3.5L15 8V2"/><line x1="9" y1="2" x2="15" y2="2"/><path d="M6.5 14h11"/></Icon>;
+const Drop = ({ s = 13 }) => <Icon size={s} strokeWidth={1.8}><path d="M12 2.5c-3 4-6 7-6 11a6 6 0 0 0 12 0c0-4-3-7-6-11z"/><path d="M9 14a3 3 0 0 0 3 3"/></Icon>;
+const BugLine = ({ s = 13 }) => <Icon size={s} strokeWidth={1.8}><rect x="6" y="7" width="12" height="11" rx="6"/><path d="M12 18v-9"/><path d="M5 9c0 1.4 1.2 2.6 2.6 2.7"/><path d="M19 9c0 1.4-1.2 2.6-2.6 2.7"/><path d="M5 17c0-1.4 1.2-2.6 2.6-2.7"/><path d="M19 17c0-1.4-1.2-2.6-2.6-2.7"/></Icon>;
+const TruckTiny = ({ s = 11 }) => <Icon size={s} color="#94a3b8" strokeWidth={2}><path d="M2 7h10v9H4z"/><path d="M12 10h4l4 4v2h-3"/><circle cx="7" cy="17" r="1.5"/><circle cx="17" cy="17" r="1.5"/></Icon>;
+const BellTiny = ({ s = 11 }) => <Icon size={s} color="#9ca3af" strokeWidth={2}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></Icon>;
+
+/* ---------- Components ---------- */
+function TopBar() {
+  return (
+    <div className="cs-bar">
+      <div className="cs-bar-left">
+        <span className="cs-pill" onClick={noop}><Eye /> <span className="lbl">CS Mode</span></span>
+        <a className="cs-link switch-link" href="#" onClick={noop}>Switch to Manufacturer</a>
+        <a className="cs-link email-link" href="#" onClick={noop}><User /> dev-admin@calyx.local</a>
+      </div>
+      <div className="cs-bar-right">
+        <a className="cs-link report-bug" href="#" onClick={noop}><Bug /> <span className="lbl">Report Bug</span></a>
+        <span className="cs-viewing">Viewing as:</span>
+        <div className="cs-search" onClick={noop}>
+          <span>Search customers...</span>
+          <ChevronUD />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NavBar() {
+  const [active, setActive] = useState("Dashboard");
+  const items = [
+    { name: "Dashboard", icon: <Grid /> },
+    { name: "Orders", icon: <Bag /> },
+    { name: "Products", icon: <Box /> },
+    { name: "Request Quote", icon: <FilePlus /> },
+    { name: "Artwork Intelligence Hub", icon: <Palette s={13} /> },
+    { name: "Approvals", icon: <Shield /> },
+    { name: "3D Preview", icon: <Cube /> },
+    { name: "Account", icon: <PersonCircle /> },
+  ];
+  return (
+    <nav className="nav">
+      <span className="nav-logo" title="Calyx Command">
+        <BrainLogo s={22} />
+        <span className="brand">CALYX<br/>COMMAND</span>
+      </span>
+      <div className="nav-items">
+        {items.map(it => (
+          <a
+            key={it.name}
+            className={`nav-item ${active === it.name ? "active" : ""}`}
+            href="#"
+            onClick={(e) => { e.preventDefault(); setActive(it.name); }}
+          >
+            {it.icon}<span className="lbl">{it.name}</span>
+          </a>
+        ))}
+      </div>
+      <div className="nav-right">
+        <a className="nav-copilot" href="#" onClick={noop}>
+          <SparkleFill s={13} /><span className="lbl">Copilot</span>
+        </a>
+        <button className="nav-bell" onClick={noop} title="Notifications"><Bell /></button>
+      </div>
+    </nav>
+  );
+}
+
+function StatCard({ label, value, sub, icon, dim }) {
+  return (
+    <div className="stat">
+      <div className="stat-head">
+        <span className="stat-label">{label}</span>
+        <span className="stat-icon">{icon}</span>
+      </div>
+      <div className={`stat-value ${dim ? "dim" : ""}`}>{value}</div>
+      <div className="stat-sub">{sub}</div>
+    </div>
+  );
+}
+
+function StatsRow() {
+  return (
+    <div className="stats">
+      <StatCard label="Open Orders"       value="0"  sub="All clear"          icon={<Box s={15} />} />
+      <StatCard label="In Production"     value="0"  sub="Press is quiet"     icon={<TrendUp s={15} />} />
+      <StatCard label="Awaiting Approval" value="0"  sub="Nothing pending"    icon={<Clipboard s={15} />} />
+      <StatCard label="Spend MTD"         value="$0" sub="From recent orders" icon={<Calendar s={15} />} />
+      <StatCard label="On-Time %"         value="—"  sub="Coming soon"        icon={<Gauge s={15} />} dim />
+    </div>
+  );
+}
+
+function NeedsAttention() {
+  const [tab, setTab] = useState("All");
+  const tabs = ["All", "Approvals", "Production", "Logistics"];
+  return (
+    <div className="card">
+      <div className="card-head">
+        <div>
+          <div className="card-title">
+            <span className="ic"><Stars /></span>
+            Needs your attention
+          </div>
+          <div className="card-sub" style={{ marginTop: 2 }}>Updated 10:55 AM</div>
+        </div>
+        <div className="tabs">
+          {tabs.map(t => (
+            <span
+              key={t}
+              className={`tab ${tab === t ? "active" : ""}`}
+              onClick={() => setTab(t)}
+            >{t}</span>
+          ))}
+        </div>
+      </div>
+      <div className="empty">
+        <div className="empty-icon-circle"><Check /></div>
+        <div className="empty-title">You're all caught up</div>
+        <div className="empty-sub">Nothing needs your attention right now. Here's what's next on the calendar.</div>
+        <div className="empty-actions">
+          <button className="btn btn-outline" onClick={noop}>View all orders</button>
+          <button className="btn btn-primary" onClick={noop}>Place an order</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CalendarCard() {
+  // April 2026 starts on Wed (offset 3); 30 days
+  const offset = 3;
+  const days = 30;
+  const today = 28;
+  const [selected, setSelected] = useState(today);
+  const cells = [];
+  for (let i = 0; i < offset; i++) cells.push({ blank: true, key: `b${i}` });
+  for (let d = 1; d <= days; d++) cells.push({ day: d, key: `d${d}` });
+  while (cells.length % 7 !== 0) cells.push({ blank: true, key: `e${cells.length}` });
+
+  return (
+    <div className="card">
+      <div className="card-title" style={{ marginBottom: 4 }}>
+        <span className="ic" style={{ color: "#1e3a8a" }}><Truck /></span>
+        Shipping &amp; Deliveries
+      </div>
+      <div className="cal-head">
+        <span className="cal-nav" onClick={noop}><ChevL /></span>
+        <span className="cal-month">April 2026</span>
+        <span className="cal-nav" onClick={noop}><ChevR /></span>
+      </div>
+      <div className="cal-grid">
+        {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => (
+          <div key={d} className="cal-dow">{d}</div>
+        ))}
+        {cells.map(c => {
+          if (c.blank) return <div key={c.key} className="cal-day muted" />;
+          const isSelected = c.day === selected;
+          return (
+            <div
+              key={c.key}
+              className={`cal-day${isSelected ? " selected" : ""}`}
+              onClick={() => setSelected(s => s === c.day ? null : c.day)}
+            >
+              {c.day}
+            </div>
+          );
+        })}
+      </div>
+      <div className="cal-legend">
+        <span className="item"><TruckTiny />Ships</span>
+        <span className="item"><span className="dot win"/>Delivery Window</span>
+        <span className="item"><span className="dot delay"/>Delayed</span>
+        <span className="item"><span className="dot delivered"/>Delivered</span>
+        <span className="item"><span className="dot notrack"/>No Tracking</span>
+        <span className="item"><BellTiny />Subsc...</span>
+      </div>
+    </div>
+  );
+}
+
+function ActiveOrders() {
+  return (
+    <div className="card">
+      <div className="card-head">
+        <div className="card-title">
+          <span className="ic" style={{ color: "#1e3a8a" }}><Box s={16} /></span>
+          Active orders
+        </div>
+        <button className="btn btn-outline" onClick={noop} style={{ padding: "5px 12px", fontSize: "12.5px" }}>View all</button>
+      </div>
+      <div className="empty">
+        <div className="empty-icon-plain" style={{ color: "#1e3a8a" }}>
+          <Box s={22} sw={1.8} />
+        </div>
+        <div className="empty-title">No active orders right now.</div>
+        <div className="empty-sub">Start one to see it move through the line.</div>
+        <button className="btn btn-primary" onClick={noop}>Place an order.</button>
+      </div>
+    </div>
+  );
+}
+
+function Quotes() {
+  return (
+    <div className="card">
+      <div className="card-head">
+        <div className="card-title">
+          <span className="ic" style={{ color: "#6b7280" }}><Doc /></span>
+          Quotes
+        </div>
+        <button className="btn btn-outline" onClick={noop} style={{ padding: "5px 12px", fontSize: "12.5px" }}>View All</button>
+      </div>
+      <div className="empty quotes-empty">
+        <div className="empty-icon-plain" style={{ color: "#6b7280" }}>
+          <Doc s={20} />
+        </div>
+        <div className="empty-title" style={{ fontWeight: 500, color: "#6b7280", marginBottom: 10 }}>No quotes in progress</div>
+        <button className="btn btn-outline" onClick={noop}>Request a Quote</button>
+      </div>
+    </div>
+  );
+}
+
+function BottomChips() {
+  return (
+    <div className="bottom-row">
+      <button className="chip dashed" onClick={noop}>
+        <BugLine /> Deliveries Debug <ChevD />
+      </button>
+      <button className="chip" onClick={noop}><Flask /> Explore Your Industry</button>
+      <button className="chip" onClick={noop}><Drop /> Spend Leak Map</button>
+    </div>
+  );
+}
+
+function WelcomeRow() {
+  return (
+    <div className="welcome-row">
+      <h1>Welcome</h1>
+      <div className="welcome-actions">
+        <button className="btn btn-primary" onClick={noop}><Cart /> Place Order</button>
+        <button className="btn btn-accent"  onClick={noop}><SparkleFill /> Explore Packaging</button>
+        <button className="btn btn-outline" onClick={noop}><Palette /> Submit Artwork</button>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <>
+      <TopBar />
+      <NavBar />
+      <main className="main">
+        <WelcomeRow />
+        <StatsRow />
+        <div className="columns">
+          <div className="col-left">
+            <NeedsAttention />
+            <ActiveOrders />
+          </div>
+          <div className="col-right">
+            <CalendarCard />
+            <Quotes />
+          </div>
+        </div>
+        <BottomChips />
+      </main>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
